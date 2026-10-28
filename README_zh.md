@@ -60,6 +60,7 @@ SpringBoard 重启后从主屏幕启动 OldSend。
 
 - [mbedTLS](https://github.com/Mbed-TLS/mbedtls) — Apache-2.0
 - [cJSON](https://github.com/DaveGamble/cJSON) — MIT
-- 历史标签图标基于 [Material Icons](https://github.com/google/material-design-icons) — Apache-2.0
+- 部分图标基于 [Material Icons](https://github.com/google/material-design-icons) — Apache-2.0
+- 部分代码在有监督的情况下使用 DeepSeek v4.1 flash 生成
 
 > OldSend 是独立项目，与 LocalSend 官方没有关系。

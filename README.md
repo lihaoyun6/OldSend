@@ -59,6 +59,7 @@ Launch OldSend from the home screen after SpringBoard restarts.
 
 - [mbedTLS](https://github.com/Mbed-TLS/mbedtls) — Apache-2.0
 - [cJSON](https://github.com/DaveGamble/cJSON) — MIT
-- The History tab icon is derived from [Material Icons](https://github.com/google/material-design-icons) — Apache-2.0
+- Some icons derived from [Material Icons](https://github.com/google/material-design-icons) — Apache-2.0
+- Some code was generated using DeepSeek v4.1 Flash under human supervision.
 
 > OldSend is an independent project and is not affiliated with the LocalSend project.
