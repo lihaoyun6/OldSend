@@ -13,10 +13,11 @@
 
 ## 功能
 
-- 原生 Objective-C / UIKit 应用，支持 iPod touch/iPhone 和 iPad，不依赖 Flutter、Electron 或网页运行时。
+- 原生 Objective-C / UIKit 应用，不依赖 Flutter、Electron 或网页运行时。
+- 支持在装有 iOS 3.1.3 或更高版本的 iPhone/iPod touch/iPad 上运行。
 - 兼容 LocalSend 协议 v2.2：组播发现、register、prepare-upload、upload 和 cancel。
 - 内置 mbedTLS 2.28.8 实现 TLS 1.2 协议。
-- 支持发送照片、文本、剪贴板内容和设备文件（内置越狱文件系统浏览器）。
+- 支持发送照片、视频、文本、剪贴板内容和设备文件（内置越狱文件系统浏览器）。
 - 简体中文和英文界面。
 
 > 需要越狱：应用以系统应用形式安装到 `/Applications`。
