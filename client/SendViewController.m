@@ -209,6 +209,7 @@
 
 - (void)refreshTapped:(id)sender {
     [[OSServer shared] announceNow];
+    [[OSServer shared] refreshDevices];
     if ([self hasPending]) {
         [self refreshDeviceSection];
     } else {

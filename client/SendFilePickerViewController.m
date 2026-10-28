@@ -81,6 +81,53 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
 
 @end
 
+@interface OSArrowButton : UIButton {
+    BOOL _pointsLeft;
+}
+- (id)initWithFrame:(CGRect)frame pointsLeft:(BOOL)pointsLeft;
+@end
+
+@implementation OSArrowButton
+
+- (id)initWithFrame:(CGRect)frame pointsLeft:(BOOL)pointsLeft {
+    if ((self = [super initWithFrame:frame])) {
+        _pointsLeft = pointsLeft;
+        self.backgroundColor = [UIColor clearColor];
+        self.showsTouchWhenHighlighted = YES;
+    }
+    return self;
+}
+
+- (void)setEnabled:(BOOL)enabled {
+    [super setEnabled:enabled];
+    [self setNeedsDisplay];
+}
+
+- (void)drawRect:(CGRect)rect {
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGRect bounds = self.bounds;
+    CGFloat cx = CGRectGetMidX(bounds);
+    CGFloat cy = CGRectGetMidY(bounds);
+    CGFloat width = 11.0f;
+    CGFloat height = 16.0f;
+
+    CGContextSetFillColorWithColor(context,
+        [UIColor colorWithWhite:1.0f alpha:(self.enabled ? 0.95f : 0.35f)].CGColor);
+    if (_pointsLeft) {
+        CGContextMoveToPoint(context, cx + width / 2.0f, cy - height / 2.0f);
+        CGContextAddLineToPoint(context, cx - width / 2.0f, cy);
+        CGContextAddLineToPoint(context, cx + width / 2.0f, cy + height / 2.0f);
+    } else {
+        CGContextMoveToPoint(context, cx - width / 2.0f, cy - height / 2.0f);
+        CGContextAddLineToPoint(context, cx + width / 2.0f, cy);
+        CGContextAddLineToPoint(context, cx - width / 2.0f, cy + height / 2.0f);
+    }
+    CGContextClosePath(context);
+    CGContextFillPath(context);
+}
+
+@end
+
 @implementation SendFilePickerViewController
 
 @synthesize delegate = _delegate;
@@ -117,6 +164,29 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     _pathLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
     [view addSubview:_pathLabel];
 
+    _toolbar = [[UIToolbar alloc] initWithFrame:CGRectMake(0, frame.size.height - 44,
+                                                           frame.size.width, 44)];
+    _toolbar.barStyle = UIBarStyleDefault;
+    _toolbar.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
+    _backButton = [[OSArrowButton alloc] initWithFrame:CGRectMake(0, 0, 44, 32)
+                                           pointsLeft:YES];
+    [_backButton addTarget:self action:@selector(goUp) forControlEvents:UIControlEventTouchUpInside];
+    _backItem = [[UIBarButtonItem alloc] initWithCustomView:_backButton];
+
+    _forwardButton = [[OSArrowButton alloc] initWithFrame:CGRectMake(0, 0, 44, 32)
+                                               pointsLeft:NO];
+    [_forwardButton addTarget:self action:@selector(goForward) forControlEvents:UIControlEventTouchUpInside];
+    _forwardItem = [[UIBarButtonItem alloc] initWithCustomView:_forwardButton];
+    {
+        UIBarButtonItem *flexible = [[UIBarButtonItem alloc]
+                                     initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                                                          target:nil
+                                                          action:nil];
+        _toolbar.items = [NSArray arrayWithObjects:_backItem, flexible, _forwardItem, nil];
+        [flexible release];
+    }
+    [view addSubview:_toolbar];
+
     self.view = view;
     [view release];
 
@@ -127,6 +197,7 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     [super viewDidLoad];
     self.title = NSLocalizedString(@"send.files_title", nil);
     _selectedPaths = [[NSMutableSet alloc] init];
+    _forwardPaths = [[NSMutableArray alloc] init];
     if (_currentPath == nil) {
         _currentPath = [OS_FILES_START_PATH copy];
     }
@@ -157,10 +228,14 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
 - (void)layoutContent {
     CGRect bounds = self.view.bounds;
     CGFloat pathHeight = 22.0f;
+    CGFloat toolbarHeight = 44.0f;
 
-    _tableView.frame = CGRectMake(0, 0, bounds.size.width, bounds.size.height - pathHeight);
-    _pathLabel.frame = CGRectMake(10, bounds.size.height - pathHeight,
+    _tableView.frame = CGRectMake(0, 0, bounds.size.width,
+                                  bounds.size.height - pathHeight - toolbarHeight);
+    _pathLabel.frame = CGRectMake(10, bounds.size.height - pathHeight - toolbarHeight,
                                   bounds.size.width - 20, pathHeight);
+    _toolbar.frame = CGRectMake(0, bounds.size.height - toolbarHeight,
+                                bounds.size.width, toolbarHeight);
     _emptyLabel.frame = CGRectMake(20, floorf((bounds.size.height - 120.0f) / 2.0f),
                                    bounds.size.width - 40, 120);
 }
@@ -177,10 +252,6 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
 
 - (void)didRotateFromInterfaceOrientation:(UIInterfaceOrientation)orientation {
     [self layoutContent];
-}
-
-- (BOOL)showsParentRow {
-    return ![_currentPath isEqualToString:@"/"];
 }
 
 - (NSString *)parentPath {
@@ -236,10 +307,12 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     _emptyLabel.text = (names == nil && error != nil)
                        ? NSLocalizedString(@"send.files_unreadable", nil)
                        : NSLocalizedString(@"send.files_empty", nil);
-    _emptyLabel.hidden = ([_entries count] > 0 || [self showsParentRow]);
-    _tableView.separatorStyle = ([_entries count] > 0 || [self showsParentRow])
+    _emptyLabel.hidden = ([_entries count] > 0);
+    _tableView.separatorStyle = [_entries count] > 0
                                 ? UITableViewCellSeparatorStyleSingleLine
                                 : UITableViewCellSeparatorStyleNone;
+    _backButton.enabled = ![_currentPath isEqualToString:@"/"];
+    _forwardButton.enabled = ([_forwardPaths count] > 0);
     [_tableView reloadData];
 }
 
@@ -269,26 +342,12 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
 }
 
 - (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
-    return (NSInteger)[_entries count] + ([self showsParentRow] ? 1 : 0);
+    return (NSInteger)[_entries count];
 }
 
 - (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSInteger offset = [self showsParentRow] ? 1 : 0;
-
-    if (offset > 0 && indexPath.row == 0) {
-        static NSString *parentIdentifier = @"ParentCell";
-        UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:parentIdentifier];
-        if (cell == nil) {
-            cell = [[[UITableViewCell alloc] initWithStyle:UITableViewCellStyleDefault
-                                           reuseIdentifier:parentIdentifier] autorelease];
-            cell.accessoryType = UITableViewCellAccessoryDisclosureIndicator;
-        }
-        cell.textLabel.text = @"..";
-        return cell;
-    }
-
     {
-        NSDictionary *entry = [_entries objectAtIndex:indexPath.row - offset];
+        NSDictionary *entry = [_entries objectAtIndex:indexPath.row];
         if ([[entry objectForKey:@"isDirectory"] boolValue]) {
             static NSString *directoryIdentifier = @"DirectoryCell";
             UITableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:directoryIdentifier];
@@ -306,7 +365,7 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     {
         static NSString *identifier = @"FileCell";
         SendFileCell *cell = (SendFileCell *)[tableView dequeueReusableCellWithIdentifier:identifier];
-        NSDictionary *entry = [_entries objectAtIndex:indexPath.row - offset];
+        NSDictionary *entry = [_entries objectAtIndex:indexPath.row];
         long long size = [[entry objectForKey:@"size"] longLongValue];
 
         if (cell == nil) {
@@ -326,22 +385,35 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     self.navigationItem.rightBarButtonItem.enabled = ([_selectedPaths count] > 0);
 }
 
-- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
-    NSInteger offset = [self showsParentRow] ? 1 : 0;
+- (void)goUp {
+    if ([_currentPath isEqualToString:@"/"]) return;
+    [_forwardPaths addObject:_currentPath];
+    [_currentPath release];
+    _currentPath = [[self parentPath] copy];
+    [self reloadFiles];
+    [_tableView setContentOffset:CGPointZero animated:NO];
+}
 
+- (void)goForward {
+    NSString *path;
+
+    if ([_forwardPaths count] == 0) return;
+    path = [[_forwardPaths lastObject] retain];
+    [_forwardPaths removeLastObject];
+    [_currentPath release];
+    _currentPath = [path copy];
+    [path release];
+    [self reloadFiles];
+    [_tableView setContentOffset:CGPointZero animated:NO];
+}
+
+- (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 
-    if (offset > 0 && indexPath.row == 0) {
-        [_currentPath release];
-        _currentPath = [[self parentPath] copy];
-        [self reloadFiles];
-        [tableView setContentOffset:CGPointZero animated:NO];
-        return;
-    }
-
     {
-        NSDictionary *entry = [_entries objectAtIndex:indexPath.row - offset];
+        NSDictionary *entry = [_entries objectAtIndex:indexPath.row];
         if ([[entry objectForKey:@"isDirectory"] boolValue]) {
+            [_forwardPaths removeAllObjects];
             [_currentPath release];
             _currentPath = [[entry objectForKey:@"path"] copy];
             [self reloadFiles];
@@ -390,9 +462,15 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     [_tableView release];
     [_emptyLabel release];
     [_pathLabel release];
+    [_toolbar release];
+    [_backItem release];
+    [_forwardItem release];
+    [_backButton release];
+    [_forwardButton release];
     [_entries release];
     [_currentPath release];
     [_selectedPaths release];
+    [_forwardPaths release];
     [super dealloc];
 }
 

@@ -10,6 +10,7 @@ extern NSString * const OSServerDidReceiveTextNotification;
 @interface OSServer : NSObject {
 @private
     volatile BOOL _running;
+    BOOL _refreshingDevices;
     NSString *_alias;
     NSString *_model;
     NSString *_fingerprint;
@@ -55,6 +56,7 @@ extern NSString * const OSServerDidReceiveTextNotification;
 - (void)start;
 - (void)stop;
 - (void)announceNow;
+- (void)refreshDevices;
 
 - (NSString *)alias;
 - (void)setAlias:(NSString *)alias;

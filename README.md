@@ -25,7 +25,7 @@
 
 Download the `.deb` or `.ipa` from [releases](https://github.com/lihaoyun6/OldSend/releases/latest) page.
 
-- `.deb`: install with Cydia, iFile or `dpkg -i OldSend_v1.0.0_iphoneos-arm.deb`.
+- `.deb`: install with Cydia, iFile or `dpkg -i OldSend_v1.0.1_iphoneos-arm.deb`.
 - `.ipa`: install with AppSync / `installipa` on a jailbroken device. It is not an App Store-signed IPA.
 
 ## Build

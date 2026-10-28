@@ -1606,6 +1606,63 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     close(fd);
 }
 
+- (void)probeDevices:(NSArray *)devices {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSMutableArray *offline = [NSMutableArray array];
+    NSInteger i;
+
+    for (i = 0; i < (NSInteger)[devices count]; i++) {
+        NSDictionary *device = [devices objectAtIndex:i];
+        NSString *ip = [device objectForKey:@"ip"];
+        int port = [[device objectForKey:@"port"] intValue];
+        NSString *fingerprint = [device objectForKey:@"fingerprint"];
+        int fd;
+
+        if ([ip length] == 0 || port <= 0 || [fingerprint length] == 0) continue;
+        fd = os_tcp_connect([ip UTF8String], port, 500);
+        if (fd >= 0) {
+            close(fd);
+        } else {
+            [offline addObject:fingerprint];
+        }
+    }
+
+    [self performSelectorOnMainThread:@selector(removeOfflineDevices:)
+                           withObject:offline
+                        waitUntilDone:NO];
+    [pool release];
+}
+
+- (void)removeOfflineDevices:(NSArray *)fingerprints {
+    BOOL changed = NO;
+    NSInteger i;
+
+    for (i = (NSInteger)[_devices count] - 1; i >= 0; i--) {
+        NSDictionary *device = [_devices objectAtIndex:i];
+        if ([fingerprints containsObject:[device objectForKey:@"fingerprint"]]) {
+            [_devices removeObjectAtIndex:i];
+            changed = YES;
+        }
+    }
+    _refreshingDevices = NO;
+    if (changed) {
+        [[NSNotificationCenter defaultCenter] postNotificationName:OSServerDidUpdateNotification
+                                                            object:self];
+    }
+}
+
+- (void)refreshDevices {
+    NSArray *snapshot;
+
+    if (_refreshingDevices) return;
+    _refreshingDevices = YES;
+    snapshot = [[NSArray alloc] initWithArray:_devices];
+    [NSThread detachNewThreadSelector:@selector(probeDevices:)
+                             toTarget:self
+                           withObject:snapshot];
+    [snapshot release];
+}
+
 - (void)announceTimerFired:(NSTimer *)timer {
     [self announceNow];
 }

@@ -14,9 +14,15 @@
     UITableView *_tableView;
     UILabel *_emptyLabel;
     UILabel *_pathLabel;
+    UIToolbar *_toolbar;
+    UIBarButtonItem *_backItem;
+    UIBarButtonItem *_forwardItem;
+    UIButton *_backButton;
+    UIButton *_forwardButton;
     NSArray *_entries;
     NSString *_currentPath;
     NSMutableSet *_selectedPaths;
+    NSMutableArray *_forwardPaths;
     id<SendFilePickerDelegate> _delegate;
 }
 
