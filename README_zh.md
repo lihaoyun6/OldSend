@@ -23,7 +23,7 @@
 
 ## 安装
 
-从 `release/` 目录下载 `.deb` 或 `.ipa`。
+从 [releases](https://github.com/lihaoyun6/OldSend/releases/latest) 页面下载 `.deb` 或 `.ipa` 安装包。
 
 - `.deb`：使用 Cydia、iFile 或 `dpkg -i OldSend_v1.0.0_iphoneos-arm.deb` 安装。
 - `.ipa`：在越狱设备上使用 AppSync / `installipa` 安装。此 IPA 不是 App Store 签名包。
