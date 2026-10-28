@@ -13,15 +13,11 @@
 
 ## Features
 
-- Native Objective-C / UIKit app for iPhone OS 3.1.3 (armv6) and iPad 1 / iOS 4.3 (armv7). No Flutter, Electron, or web runtime.
-- LocalSend protocol v2.2: multicast discovery, register, prepare-upload, upload, and cancel.
-- TLS 1.2 through bundled mbedTLS 2.28.8. Identity is an ECDSA P-256 self-signed certificate; the fingerprint is the uppercase SHA-256 of the DER certificate.
-- Receive: explicit accept prompt by default, or quick save. Photos and videos are copied to Camera Roll while an app copy stays in History; text messages open in a read-only viewer without being persisted.
-- Send: queue files, photos, text, and clipboard content in one transfer. The Files picker browses the device filesystem (starting at `/var/mobile`) and supports multi-select across folders. On iOS 4+, photos and videos use a custom multi-select grid; iOS 3 falls back to the system picker.
-- Progress HUD with cancel, including cancelling while waiting for the receiver to accept.
-- History: file type icons, swipe to delete, edit mode with multi-select, and the current directory shown at the bottom.
-- Settings: nickname with random generator, quick save, listening address, and version. Native iPad layout with landscape and popovers; iPhone / iPod stay in portrait.
-- English and Simplified Chinese interfaces.
+- Native Objective-C / UIKit application supporting iPod touch, iPhone, and iPad, with no dependency on Flutter, Electron, or web runtimes.
+- Compatible with LocalSend protocol v2.2: multicast discovery, register, prepare-upload, upload, and cancel.
+- Implements the TLS 1.2 protocol using bundled mbedTLS 2.28.8.
+- Supports sending photos, text, clipboard contents, and device files (with a built-in jailbroken filesystem browser).
+- Simplified Chinese and English interfaces.
 
 > A jailbroken device is required. OldSend is installed as a system app under `/Applications`.
 

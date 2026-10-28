@@ -13,14 +13,10 @@
 
 ## 功能
 
-- 原生 Objective-C / UIKit 应用，支持 iPhone OS 3.1.3（armv6）和 iPad 1 / iOS 4.3（armv7），不依赖 Flutter、Electron 或网页运行时。
+- 原生 Objective-C / UIKit 应用，支持 iPod touch/iPhone 和 iPad，不依赖 Flutter、Electron 或网页运行时。
 - 兼容 LocalSend 协议 v2.2：组播发现、register、prepare-upload、upload 和 cancel。
-- 内置 mbedTLS 2.28.8 实现 TLS 1.2。身份使用 ECDSA P-256 自签名证书，指纹为 DER 证书的大写 SHA-256。
-- 接收：默认弹窗确认，也可开启快速保存。照片和视频会保存到相册，同时在历史记录保留一份；文本消息使用只读预览，不落盘。
-- 发送：可在一次传输中排队文件、照片、文本和剪贴板内容。文件选择可直接浏览设备文件系统（默认从 `/var/mobile` 开始），支持跨文件夹多选；iOS 4+ 的照片和视频使用自定义多选网格，iOS 3 回退到系统选择器。
-- 发送进度 HUD 支持取消，包括等待对方接受时的取消。
-- 历史记录：文件类型图标、左划删除、多选编辑，底部显示当前目录路径。
-- 设置：设备昵称（支持随机生成）、快速保存、监听地址和版本号。iPad 使用原生布局、横屏和 popover；iPhone / iPod 保持竖屏。
+- 内置 mbedTLS 2.28.8 实现 TLS 1.2 协议。
+- 支持发送照片、文本、剪贴板内容和设备文件（内置越狱文件系统浏览器）。
 - 简体中文和英文界面。
 
 > 需要越狱：应用以系统应用形式安装到 `/Applications`。
