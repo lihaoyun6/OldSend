@@ -13,10 +13,10 @@
 
 ## Features
 
-- Native Objective-C / UIKit application supporting iPod touch, iPhone, and iPad, with no dependency on Flutter, Electron, or web runtimes.
+- Native Objective-C / UIKit application supporting iPhone/iPod touch/iPad, with no dependency on Flutter, Electron, or web runtimes.
 - Compatible with LocalSend protocol v2.2: multicast discovery, register, prepare-upload, upload, and cancel.
 - Implements the TLS 1.2 protocol using bundled mbedTLS 2.28.8.
-- Supports sending photos, text, clipboard contents, and device files (with a built-in jailbroken filesystem browser).
+- Supports sending photos, videos, text, and device files (with a built-in jailbroken filesystem browser).
 - Simplified Chinese and English interfaces.
 
 > A jailbroken device is required. OldSend is installed as a system app under `/Applications`.
