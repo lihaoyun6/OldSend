@@ -1,6 +1,6 @@
 #
 <p align="center">
-<img src="./client/Icon.png" />
+<img src="./client/Icon@2x.png" />
 <h1 align="center">OldSend</h1>
 <h3 align="center">A native LocalSend-compatible client for iOS 3.1.3 and later</h3>
 </p>
