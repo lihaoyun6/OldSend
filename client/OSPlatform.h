@@ -5,3 +5,11 @@ BOOL OSIsPad(void);
 
 /* Small hint text: bold on iPad, regular on iPhone/iPod. */
 UIFont *OSSmallFont(CGFloat size);
+
+/* System app (/Applications) keeps the old shared paths; sandboxed IPA builds
+   use their own writable container. */
+NSString *OSAppDataDirectory(void);
+NSString *OSReceivedDirectory(void);
+NSString *OSOutgoingDirectory(void);
+NSString *OSLogFilePath(void);
+NSString *OSInitialBrowseDirectory(void);

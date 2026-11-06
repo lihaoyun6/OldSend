@@ -4,8 +4,6 @@
 #import "FileTypeIcon.h"
 #include <math.h>
 
-#define OS_FILES_START_PATH @"/var/mobile"
-
 static NSComparisonResult OSCompareEntryNames(id first, id second, void *context) {
     NSString *firstName = [first objectForKey:@"name"];
     NSString *secondName = [second objectForKey:@"name"];
@@ -199,7 +197,7 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     _selectedPaths = [[NSMutableSet alloc] init];
     _forwardPaths = [[NSMutableArray alloc] init];
     if (_currentPath == nil) {
-        _currentPath = [OS_FILES_START_PATH copy];
+        _currentPath = [OSInitialBrowseDirectory() copy];
     }
 
     UIBarButtonItem *cancel = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemCancel

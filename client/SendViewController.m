@@ -412,7 +412,7 @@
     data = UIImageJPEGRepresentation(resized != nil ? resized : image, 0.9f);
     if (data == nil) return;
 
-    directory = @"/var/mobile/Library/OldSend/Outgoing";
+    directory = OSOutgoingDirectory();
     [[NSFileManager defaultManager] createDirectoryAtPath:directory
                               withIntermediateDirectories:YES
                                                attributes:nil
@@ -431,7 +431,7 @@
 }
 
 - (void)mediaPicker:(id)picker didFinishWithItems:(NSArray *)items {
-    NSString *directory = @"/var/mobile/Library/OldSend/Outgoing";
+    NSString *directory = OSOutgoingDirectory();
 
     [self dismissModalViewControllerAnimated:YES];
     [[NSFileManager defaultManager] createDirectoryAtPath:directory

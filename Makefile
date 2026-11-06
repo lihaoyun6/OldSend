@@ -29,15 +29,28 @@ UI_IMAGES  := client/TabReceive.png client/TabSend.png client/TabSettings.png \
               client/DeviceMobile.png client/DeviceDesktop.png client/DeviceWeb.png \
               client/DeviceHeadless.png client/DeviceServer.png \
               client/SettingsBackground.png client/RandomAlias.png client/MediaVideoIcon.png
+UI_IMAGES  += client/TabReceive@2x.png client/TabSend@2x.png \
+              client/TabSettings@2x.png client/TabHistory@2x.png \
+              client/ReceiveWifiLarge@2x.png client/ReceiveWifiLargeBlue@2x.png \
+              client/DeviceMobile@2x.png client/DeviceDesktop@2x.png \
+              client/DeviceWeb@2x.png client/DeviceHeadless@2x.png \
+              client/DeviceServer@2x.png \
+              client/RandomAlias@2x.png client/MediaVideoIcon@2x.png
 TYPE_ICONS := $(wildcard client/icons/*.png)
-UI_ICONS   := client/Icon.png client/Icon-Small.png client/Icon-Small-50.png \
-              client/Icon-72.png
+UI_ICONS   := client/Icon.png client/Icon@2x.png \
+              client/Icon-Small.png client/Icon-Small@2x.png \
+              client/Icon-72.png client/Icon-72@2x.png \
+              client/Icon-Small-50.png client/Icon-Small-50@2x.png
 L10N       := client/en.lproj/Localizable.strings client/zh_CN.lproj/Localizable.strings
 
+DEBUG ?= 0
 CFLAGS_COMMON := -isysroot $(SDK) -O2 -marm -mno-thumb \
                  -fno-objc-arc -fno-stack-protector \
                  -Iclient -Ivendor -Ivendor/mbedtls/include \
                  -Wno-deprecated-declarations
+ifeq ($(DEBUG),1)
+CFLAGS_COMMON += -DDEBUG
+endif
 CFLAGS_armv6  := -target armv6-apple-ios3.1.3 $(CFLAGS_COMMON)
 CFLAGS_armv7  := -target armv7-apple-ios3.1.3 $(CFLAGS_COMMON)
 LDFLAGS := -framework UIKit -framework Foundation -framework QuartzCore \

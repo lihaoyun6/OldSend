@@ -1,5 +1,6 @@
 #import "OSServer.h"
 #import "OSHUD.h"
+#import "OSPlatform.h"
 #import <UIKit/UIKit.h>
 
 #include <sys/types.h>
@@ -35,7 +36,6 @@
 
 #define OS_PORT 53317
 #define OS_PROTOCOL_VERSION "2.2"
-#define OS_RECEIVED_DIR "/var/mobile/Library/OldSend/Received"
 #define OS_MAX_FILES 32
 #define OS_MAX_JSON (8 * 1024 * 1024)
 
@@ -87,11 +87,14 @@ static volatile BOOL gCancelSend = NO;
 static volatile int gSendFD = -1;
 
 static void os_file_log(NSString *line) {
-    FILE *file = fopen("/var/mobile/oldsend.log", "a");
+#ifdef DEBUG
+    NSString *logPath = OSLogFilePath();
+    FILE *file = fopen([logPath fileSystemRepresentation], "a");
     if (file == NULL) return;
     fprintf(file, "%s\n", [line UTF8String]);
     fflush(file);
     fclose(file);
+#endif
 }
 
 static void os_logf(OSServer *server, NSString *fmt, ...) {
@@ -1073,7 +1076,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     if ([path length] == 0) return NO;
     removed = [[NSFileManager defaultManager] removeItemAtPath:path error:NULL];
     if (removed) {
-        marker = [[[@OS_RECEIVED_DIR stringByAppendingPathComponent:@".saved"]
+        marker = [[[OSReceivedDirectory() stringByAppendingPathComponent:@".saved"]
                    stringByAppendingPathComponent:name] copy];
         [[NSFileManager defaultManager] removeItemAtPath:marker error:NULL];
         [marker release];
@@ -1083,7 +1086,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
 
 - (NSArray *)receivedFiles {
     NSFileManager *manager = [NSFileManager defaultManager];
-    NSString *directory = @OS_RECEIVED_DIR;
+    NSString *directory = OSReceivedDirectory();
     NSArray *names = [manager contentsOfDirectoryAtPath:directory error:NULL];
     NSMutableArray *result = [NSMutableArray array];
 
@@ -1889,7 +1892,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     }
     _localIP = [[OSServer localIPAddress] copy];
 
-    NSString *dir = @"/var/mobile/Library/OldSend";
+    NSString *dir = OSAppDataDirectory();
     OSIdentity *identity = (OSIdentity *)calloc(1, sizeof(OSIdentity));
     char err[256] = {0};
     int ret = os_identity_init(identity, dir, err, sizeof err);
@@ -2201,7 +2204,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     NSMutableArray *tempPaths = [NSMutableArray array];
     NSMutableDictionary *tokens = [NSMutableDictionary dictionary];
     NSFileManager *manager = [NSFileManager defaultManager];
-    NSString *outgoingDirectory = @"/var/mobile/Library/OldSend/Outgoing";
+    NSString *outgoingDirectory = OSOutgoingDirectory();
     NSString *errorMessage = nil;
     BOOL success = NO;
     BOOL cancelled = NO;
@@ -2796,7 +2799,7 @@ cleanup:
     OSFileEntry *entry = NULL;
     BOOL isTextEntry = NO;
     int i;
-    NSString *directory = @OS_RECEIVED_DIR;
+    NSString *directory = OSReceivedDirectory();
     NSString *tempDirectory;
     NSString *tempPath;
     NSString *finalPath;
@@ -3257,7 +3260,7 @@ cleanup:
 }
 
 - (void)writeSavedMarkerForPath:(NSString *)path {
-    NSString *directory = [@OS_RECEIVED_DIR stringByAppendingPathComponent:@".saved"];
+    NSString *directory = [OSReceivedDirectory() stringByAppendingPathComponent:@".saved"];
     [[NSFileManager defaultManager] createDirectoryAtPath:directory
                               withIntermediateDirectories:YES
                                                attributes:nil
@@ -3271,7 +3274,7 @@ cleanup:
 - (void)retryPendingPhotosThread {
     NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
     NSFileManager *manager = [NSFileManager defaultManager];
-    NSString *directory = @OS_RECEIVED_DIR;
+    NSString *directory = OSReceivedDirectory();
     NSString *markerDirectory = [directory stringByAppendingPathComponent:@".saved"];
     NSArray *names;
 

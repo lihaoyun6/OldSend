@@ -5,7 +5,6 @@
 #import "OSServer.h"
 #include <math.h>
 
-#define OS_RECEIVED_PATH @"/var/mobile/Library/OldSend/Received"
 
 @interface FileCell : UITableViewCell {
     SelectionCircleView *_checkView;
@@ -147,7 +146,8 @@
     _pathLabel.font = OSSmallFont(OSIsPad() ? 13.0f : 11.0f);
     _pathLabel.textAlignment = UITextAlignmentCenter;
     _pathLabel.textColor = [UIColor colorWithWhite:0.55f alpha:1.0f];
-    _pathLabel.text = OS_RECEIVED_PATH;
+    _pathLabel.lineBreakMode = UILineBreakModeMiddleTruncation;
+    _pathLabel.text = OSReceivedDirectory();
     _pathLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
     [view addSubview:_pathLabel];
 
