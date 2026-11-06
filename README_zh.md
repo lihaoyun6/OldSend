@@ -1,6 +1,6 @@
 #
 <p align="center">
-<img src="./client/Icon.png" />
+<img src="./client/Icon@2x.png" />
 <h1 align="center">OldSend</h1>
 <h3 align="center">最低可以运行在 iOS 3.1.3 上的原生 LocalSend 兼容客户端</h3>
 </p>
