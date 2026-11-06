@@ -175,13 +175,25 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
                                                pointsLeft:NO];
     [_forwardButton addTarget:self action:@selector(goForward) forControlEvents:UIControlEventTouchUpInside];
     _forwardItem = [[UIBarButtonItem alloc] initWithCustomView:_forwardButton];
+
+    _homeButton = [[UIButton alloc] initWithFrame:CGRectMake(0, 0, 44, 32)];
+    [_homeButton setImage:[UIImage imageNamed:@"HomeButton.png"] forState:UIControlStateNormal];
+    _homeButton.showsTouchWhenHighlighted = YES;
+    [_homeButton addTarget:self action:@selector(goHome) forControlEvents:UIControlEventTouchUpInside];
+    _homeItem = [[UIBarButtonItem alloc] initWithCustomView:_homeButton];
     {
-        UIBarButtonItem *flexible = [[UIBarButtonItem alloc]
-                                     initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
-                                                          target:nil
-                                                          action:nil];
-        _toolbar.items = [NSArray arrayWithObjects:_backItem, flexible, _forwardItem, nil];
-        [flexible release];
+        UIBarButtonItem *flexibleLeft = [[UIBarButtonItem alloc]
+                                         initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                                                              target:nil
+                                                              action:nil];
+        UIBarButtonItem *flexibleRight = [[UIBarButtonItem alloc]
+                                          initWithBarButtonSystemItem:UIBarButtonSystemItemFlexibleSpace
+                                                               target:nil
+                                                               action:nil];
+        _toolbar.items = [NSArray arrayWithObjects:_backItem, flexibleLeft, _homeItem,
+                                                   flexibleRight, _forwardItem, nil];
+        [flexibleLeft release];
+        [flexibleRight release];
     }
     [view addSubview:_toolbar];
 
@@ -405,6 +417,17 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     [_tableView setContentOffset:CGPointZero animated:NO];
 }
 
+- (void)goHome {
+    NSString *documents = OSInitialBrowseDirectory();
+
+    if ([_currentPath isEqualToString:documents]) return;
+    [_forwardPaths removeAllObjects];
+    [_currentPath release];
+    _currentPath = [documents copy];
+    [self reloadFiles];
+    [_tableView setContentOffset:CGPointZero animated:NO];
+}
+
 - (void)tableView:(UITableView *)tableView didSelectRowAtIndexPath:(NSIndexPath *)indexPath {
     [tableView deselectRowAtIndexPath:indexPath animated:YES];
 
@@ -463,8 +486,10 @@ static NSComparisonResult OSCompareEntryNames(id first, id second, void *context
     [_toolbar release];
     [_backItem release];
     [_forwardItem release];
+    [_homeItem release];
     [_backButton release];
     [_forwardButton release];
+    [_homeButton release];
     [_entries release];
     [_currentPath release];
     [_selectedPaths release];

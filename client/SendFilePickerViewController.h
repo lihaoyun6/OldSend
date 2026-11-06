@@ -17,8 +17,10 @@
     UIToolbar *_toolbar;
     UIBarButtonItem *_backItem;
     UIBarButtonItem *_forwardItem;
+    UIBarButtonItem *_homeItem;
     UIButton *_backButton;
     UIButton *_forwardButton;
+    UIButton *_homeButton;
     NSArray *_entries;
     NSString *_currentPath;
     NSMutableSet *_selectedPaths;

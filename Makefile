@@ -35,7 +35,8 @@ UI_IMAGES  += client/TabReceive@2x.png client/TabSend@2x.png \
               client/DeviceMobile@2x.png client/DeviceDesktop@2x.png \
               client/DeviceWeb@2x.png client/DeviceHeadless@2x.png \
               client/DeviceServer@2x.png \
-              client/RandomAlias@2x.png client/MediaVideoIcon@2x.png
+              client/RandomAlias@2x.png client/MediaVideoIcon@2x.png \
+              client/HomeButton.png client/HomeButton@2x.png
 TYPE_ICONS := $(wildcard client/icons/*.png)
 UI_ICONS   := client/Icon.png client/Icon@2x.png \
               client/Icon-Small.png client/Icon-Small@2x.png \
