@@ -35,12 +35,8 @@ NSString * const OSHUDDidCancelNotification = @"OSHUDDidCancelNotification";
 }
 
 + (UIView *)targetContainer {
-    UIWindow *window = [self targetWindow];
-    if (window != nil && [window respondsToSelector:@selector(rootViewController)]) {
-        UIViewController *root = [window rootViewController];
-        if (root != nil && root.view != nil) return root.view;
-    }
-    return window;
+    /* Use the window so the HUD stays above modal share-send screens. */
+    return [self targetWindow];
 }
 
 + (void)buildIfNeeded {

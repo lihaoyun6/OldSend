@@ -4,6 +4,7 @@ SDK_DYLIB  ?= $(TMPDIR)sdk/iPhoneOS4.2.sdk
 CC         := $(shell xcrun -f clang)
 LIPO       := $(shell xcrun -f lipo)
 LDID       ?= ldid
+ENTITLEMENTS := client/OldSend.entitlements
 
 BUILD      := build
 BUNDLE     ?= $(BUILD)/$(APP).app
@@ -82,11 +83,11 @@ armv7: $(BUILD)/OldSend-armv7 $(MEDIA_DYLIB)
 		MEDIA_DYLIB=$(MEDIA_DYLIB)
 
 bundle: $(BUNDLE_BINARY) $(MEDIA_DYLIB) \
-        client/Info.plist $(UI_ICONS) $(UI_IMAGES) $(L10N)
+        client/Info.plist $(ENTITLEMENTS) $(UI_ICONS) $(UI_IMAGES) $(L10N)
 	@rm -rf $(BUNDLE)
 	@mkdir -p $(BUNDLE)/en.lproj $(BUNDLE)/zh_CN.lproj
 	@cp $(BUNDLE_BINARY) $(BUNDLE)/$(APP)
-	@$(LDID) -S $(BUNDLE)/$(APP)
+	@$(LDID) -S$(ENTITLEMENTS) $(BUNDLE)/$(APP)
 	@cp client/Info.plist $(BUNDLE)/Info.plist
 	@cp $(UI_ICONS) $(BUNDLE)/
 	@cp $(UI_IMAGES) $(BUNDLE)/

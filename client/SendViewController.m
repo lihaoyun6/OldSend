@@ -6,6 +6,25 @@
 #import "MediaPickerLoader.h"
 #include <math.h>
 
+static NSString *OSMIMETypeForPath(NSString *path) {
+    NSString *extension = [[path pathExtension] lowercaseString];
+
+    if ([extension isEqualToString:@"jpg"] || [extension isEqualToString:@"jpeg"]) {
+        return @"image/jpeg";
+    }
+    if ([extension isEqualToString:@"png"]) return @"image/png";
+    if ([extension isEqualToString:@"gif"]) return @"image/gif";
+    if ([extension isEqualToString:@"bmp"]) return @"image/bmp";
+    if ([extension isEqualToString:@"tif"] || [extension isEqualToString:@"tiff"]) {
+        return @"image/tiff";
+    }
+    if ([extension isEqualToString:@"mov"]) return @"video/quicktime";
+    if ([extension isEqualToString:@"mp4"] || [extension isEqualToString:@"m4v"]) {
+        return @"video/mp4";
+    }
+    return @"application/octet-stream";
+}
+
 /* iPhoneOS 3.1.3 SDK predates the iPad; UIPopoverController is declared here
    and only instantiated via NSClassFromString on iPad at runtime. */
 @interface UIPopoverController : NSObject
@@ -142,17 +161,35 @@
     [super viewDidLoad];
     self.title = NSLocalizedString(@"send.title", nil);
     _pendingItems = [[NSMutableArray alloc] init];
+    if (_shareMode) _shareImportedPaths = [[NSMutableArray alloc] init];
 
-    UIBarButtonItem *refresh = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
-                                                                            target:self
-                                                                            action:@selector(refreshTapped:)];
-    self.navigationItem.leftBarButtonItem = refresh;
-    [refresh release];
+    if (_shareMode) {
+        UIBarButtonItem *cancel = [[UIBarButtonItem alloc]
+            initWithTitle:NSLocalizedString(@"common.cancel", nil)
+                    style:UIBarButtonItemStyleBordered
+                   target:self
+                   action:@selector(cancelShareTapped:)];
+        self.navigationItem.leftBarButtonItem = cancel;
+        [cancel release];
 
-    _addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd
-                                                               target:self
-                                                               action:@selector(addTapped:)];
-    self.navigationItem.rightBarButtonItem = _addButton;
+        UIBarButtonItem *refresh = [[UIBarButtonItem alloc]
+            initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
+                                 target:self
+                                 action:@selector(refreshTapped:)];
+        self.navigationItem.rightBarButtonItem = refresh;
+        [refresh release];
+    } else {
+        UIBarButtonItem *refresh = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemRefresh
+                                                                                target:self
+                                                                                action:@selector(refreshTapped:)];
+        self.navigationItem.leftBarButtonItem = refresh;
+        [refresh release];
+
+        _addButton = [[UIBarButtonItem alloc] initWithBarButtonSystemItem:UIBarButtonSystemItemAdd
+                                                                   target:self
+                                                                   action:@selector(addTapped:)];
+        self.navigationItem.rightBarButtonItem = _addButton;
+    }
 
     [[NSNotificationCenter defaultCenter] addObserver:self
                                              selector:@selector(serverDidUpdate:)
@@ -281,6 +318,57 @@
 }
 
 - (void)sendFilePickerDidCancel:(SendFilePickerViewController *)picker {
+}
+
+- (void)addPendingFilePath:(NSString *)path {
+    NSDictionary *attributes;
+    NSString *name;
+
+    if ([path length] == 0) return;
+    if (_pendingItems == nil) [self view];
+
+    attributes = [[NSFileManager defaultManager] attributesOfItemAtPath:path error:NULL];
+    name = [path lastPathComponent];
+    [_pendingItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+        @"file", @"kind",
+        path, @"path",
+        name, @"name",
+        OSMIMETypeForPath(path), @"type",
+        [NSNumber numberWithLongLong:
+            [[attributes objectForKey:NSFileSize] longLongValue]], @"size", nil]];
+    if (_shareMode && ![_shareImportedPaths containsObject:path]) {
+        [_shareImportedPaths addObject:path];
+    }
+    [self refresh];
+}
+
+- (void)addPendingText:(NSString *)text {
+    if ([text length] == 0) return;
+    if (_pendingItems == nil) [self view];
+    [_pendingItems addObject:[NSDictionary dictionaryWithObjectsAndKeys:
+        @"text", @"kind", text, @"text", nil]];
+    [self refresh];
+}
+
+- (void)enableShareMode {
+    _shareMode = YES;
+}
+
+- (void)setReturnBundleIdentifier:(NSString *)bundleIdentifier {
+    [_returnBundleIdentifier release];
+    _returnBundleIdentifier = [bundleIdentifier copy];
+}
+
+- (void)removeShareImportedFiles {
+    for (NSString *path in _shareImportedPaths) {
+        [[NSFileManager defaultManager] removeItemAtPath:path error:NULL];
+    }
+    [_shareImportedPaths removeAllObjects];
+}
+
+- (void)cancelShareTapped:(id)sender {
+    [self removeShareImportedFiles];
+    [self leaveShareModeAndReturn];
 }
 
 - (UIView *)popoverAnchorView {
@@ -606,7 +694,7 @@
 }
 
 - (void)refresh {
-    BOOL editing = [self hasPending];
+    BOOL editing = _shareMode ? NO : [self hasPending];
 
     [_tableView reloadData];
     if (_tableView.editing != editing) {
@@ -636,11 +724,13 @@
 }
 
 - (BOOL)tableView:(UITableView *)tableView canEditRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (_shareMode) return NO;
     return [self hasPending] && indexPath.section == 0;
 }
 
 - (UITableViewCellEditingStyle)tableView:(UITableView *)tableView
            editingStyleForRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (_shareMode) return UITableViewCellEditingStyleNone;
     if ([self hasPending] && indexPath.section == 0) {
         return UITableViewCellEditingStyleDelete;
     }
@@ -650,6 +740,7 @@
 - (void)tableView:(UITableView *)tableView
         commitEditingStyle:(UITableViewCellEditingStyle)editingStyle
          forRowAtIndexPath:(NSIndexPath *)indexPath {
+    if (_shareMode) return;
     if (editingStyle == UITableViewCellEditingStyleDelete &&
         [self hasPending] && indexPath.section == 0) {
         [self clearPending];
@@ -766,6 +857,38 @@
     [OSHUD showCancelling];
 }
 
+- (void)leaveShareModeAndReturn {
+    BOOL opened = NO;
+    NSString *bundle = _returnBundleIdentifier;
+
+    [[NSNotificationCenter defaultCenter] postNotificationName:@"OSShareSendDidDismiss"
+                                                        object:self];
+
+    /* iOS 4: only Photos is a multi-role app that cannot be brought back in
+       the Photos role; Safari can be launched normally. */
+    if ([[[UIDevice currentDevice] systemVersion] floatValue] < 5.0f &&
+        [bundle isEqualToString:@"com.apple.mobileslideshow"]) {
+        [self dismissModalViewControllerAnimated:YES];
+        return;
+    }
+
+    OSLogDebug(@"return bundle=%@", bundle);
+    if ([bundle length] > 0) {
+        opened = OSLaunchApplicationByBundleID(bundle);
+    }
+    OSLogDebug(@"return opened=%d", opened);
+
+    if (!opened) {
+        [self dismissModalViewControllerAnimated:YES];
+    }
+}
+
+- (void)alertView:(UIAlertView *)alertView didDismissWithButtonIndex:(NSInteger)buttonIndex {
+    if (alertView.tag == 0x53454E44) {
+        [self leaveShareModeAndReturn];
+    }
+}
+
 - (void)sendDidFinish:(NSNotification *)notification {
     NSDictionary *result = [notification userInfo];
     BOOL success = [[result objectForKey:@"success"] boolValue];
@@ -779,26 +902,30 @@
     if (cancelled) {
         alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"send.cancelled_title", nil)
                                            message:NSLocalizedString(@"send.cancelled_message", nil)
-                                          delegate:nil
+                                          delegate:self
                                  cancelButtonTitle:NSLocalizedString(@"common.ok", nil)
                                  otherButtonTitles:nil];
+        if (_shareMode) alert.tag = 0x53454E44;
     } else if (success) {
         [self clearPending];
         [self refresh];
+        if (_shareMode) [self removeShareImportedFiles];
         alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"send.success_title", nil)
                                            message:[NSString stringWithFormat:
                                                     NSLocalizedString(@"send.success_message", nil), alias]
-                                          delegate:nil
+                                          delegate:self
                                  cancelButtonTitle:NSLocalizedString(@"common.ok", nil)
                                  otherButtonTitles:nil];
+        if (_shareMode) alert.tag = 0x53454E44;
     } else {
         NSString *message = [result objectForKey:@"message"];
         if ([message length] == 0) message = NSLocalizedString(@"send.failed_message", nil);
         alert = [[UIAlertView alloc] initWithTitle:NSLocalizedString(@"send.failed_title", nil)
                                            message:message
-                                          delegate:nil
+                                          delegate:self
                                  cancelButtonTitle:NSLocalizedString(@"common.ok", nil)
                                  otherButtonTitles:nil];
+        if (_shareMode) alert.tag = 0x53454E44;
     }
     [alert show];
     [alert release];
@@ -810,6 +937,8 @@
     [_emptyLabel release];
     [_addButton release];
     [_pendingItems release];
+    [_shareImportedPaths release];
+    [_returnBundleIdentifier release];
     [_mediaPopover release];
     [_typeSheet release];
     [super dealloc];

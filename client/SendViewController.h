@@ -5,6 +5,7 @@
 
 @interface SendViewController : UIViewController <UITableViewDataSource, UITableViewDelegate,
                                                    UIActionSheetDelegate,
+                                                   UIAlertViewDelegate,
                                                    UIImagePickerControllerDelegate,
                                                    UINavigationControllerDelegate,
                                                    TextInputViewControllerDelegate,
@@ -16,6 +17,14 @@
     NSMutableArray *_pendingItems;
     id _mediaPopover;
     UIActionSheet *_typeSheet;
+    BOOL _shareMode;
+    NSMutableArray *_shareImportedPaths;
+    NSString *_returnBundleIdentifier;
 }
+
+- (void)addPendingFilePath:(NSString *)path;
+- (void)addPendingText:(NSString *)text;
+- (void)enableShareMode;
+- (void)setReturnBundleIdentifier:(NSString *)bundleIdentifier;
 
 @end

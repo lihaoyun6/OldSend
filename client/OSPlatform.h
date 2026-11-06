@@ -13,3 +13,7 @@ NSString *OSReceivedDirectory(void);
 NSString *OSOutgoingDirectory(void);
 NSString *OSLogFilePath(void);
 NSString *OSInitialBrowseDirectory(void);
+
+/* Launch another app by bundle id (jailbroken devices). */
+BOOL OSLaunchApplicationByBundleID(NSString *bundleID);
+void OSLogDebug(NSString *format, ...);
