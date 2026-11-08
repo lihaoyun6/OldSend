@@ -17,3 +17,4 @@ NSString *OSInitialBrowseDirectory(void);
 /* Launch another app by bundle id (jailbroken devices). */
 BOOL OSLaunchApplicationByBundleID(NSString *bundleID);
 void OSLogDebug(NSString *format, ...);
+BOOL OSApplicationExists(NSString *bundleID);

@@ -867,7 +867,8 @@ static NSString *OSMIMETypeForPath(NSString *path) {
     /* iOS 4: only Photos is a multi-role app that cannot be brought back in
        the Photos role; Safari can be launched normally. */
     if ([[[UIDevice currentDevice] systemVersion] floatValue] < 5.0f &&
-        [bundle isEqualToString:@"com.apple.mobileslideshow"]) {
+        [bundle isEqualToString:@"com.apple.mobileslideshow"] &&
+        !OSApplicationExists(@"com.apple.camera")) {
         [self dismissModalViewControllerAnimated:YES];
         return;
     }

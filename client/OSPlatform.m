@@ -188,6 +188,10 @@ BOOL OSLaunchApplicationByBundleID(NSString *bundleID) {
     return NO;
 }
 
+BOOL OSApplicationExists(NSString *bundleID) {
+    return OSInfoDictionaryForBundle(bundleID) != nil;
+}
+
 void OSLogDebug(NSString *format, ...) {
 #ifdef DEBUG
     va_list args;
@@ -197,6 +201,8 @@ void OSLogDebug(NSString *format, ...) {
     va_start(args, format);
     line = [[NSString alloc] initWithFormat:format arguments:args];
     va_end(args);
+
+    NSLog(@"OldSend: %@", line);
 
     file = fopen([OSLogFilePath() fileSystemRepresentation], "a");
     if (file != NULL) {
