@@ -24,9 +24,8 @@
 
 ## 安装
 
-从 [releases](https://github.com/lihaoyun6/OldSend/releases/latest) 页面下载 `OldSend_v1.0.3.ipa`。
-
-- `.ipa`：在越狱设备上使用 AppSync / `installipa` 安装。此 IPA 不是 App Store 签名包。
+从 [releases](https://github.com/lihaoyun6/OldSend/releases/latest) 页面下载 `.ipa` 安装包。
+然后在越狱设备上使用 libmobiledevice 或 ipainstaller 等方式安装。
 
 ## 手动编译
 
