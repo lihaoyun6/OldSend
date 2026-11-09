@@ -23,9 +23,8 @@
 
 ## Installation
 
-Download `OldSend_v1.0.3.ipa` from the [releases](https://github.com/lihaoyun6/OldSend/releases/latest) page.
-
-- `.ipa`: install with AppSync / `installipa` on a jailbroken device. It is not an App Store-signed IPA.
+Download `.ipa` file from the [releases](https://github.com/lihaoyun6/OldSend/releases/latest) page.
+Then install with libmobiledevice or ipainstaller on a jailbroken device. It is not an App Store-signed IPA.
 
 ## Build
 
