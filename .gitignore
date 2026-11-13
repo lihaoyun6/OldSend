@@ -47,3 +47,7 @@ fastlane/test_output
 sdk/
 # build output
 /build/
+
+# packaged artifacts
+/dist/
+/build-armv7/

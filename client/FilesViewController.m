@@ -5,6 +5,15 @@
 #import "OSServer.h"
 #include <math.h>
 
+/* iFile 只支持打开到目录（ifile://<目录路径>），没有定位到具体文件的 scheme。 */
+static BOOL OSIFileInstalled(void) {
+    static int installed = -1;
+    if (installed < 0) {
+        installed = [[UIApplication sharedApplication] canOpenURL:
+                     [NSURL URLWithString:@"ifile://"]] ? 1 : 0;
+    }
+    return installed == 1;
+}
 
 @interface FileCell : UITableViewCell {
     SelectionCircleView *_checkView;
@@ -148,6 +157,14 @@
     _pathLabel.textColor = [UIColor colorWithWhite:0.55f alpha:1.0f];
     _pathLabel.lineBreakMode = UILineBreakModeMiddleTruncation;
     _pathLabel.text = OSReceivedDirectory();
+
+    if (OSIFileInstalled()) {
+        _openInIFileItem = [[UIBarButtonItem alloc]
+            initWithTitle:NSLocalizedString(@"files.open_in_ifile", nil)
+                    style:UIBarButtonItemStyleBordered
+                   target:self
+                   action:@selector(openReceivedInIFile)];
+    }
     _pathLabel.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleTopMargin;
     [view addSubview:_pathLabel];
 
@@ -228,7 +245,7 @@ didEndEditingRowAtIndexPath:(NSIndexPath *)indexPath {
                                                                         : UIBarButtonSystemItemEdit)
                                                   target:self
                                                   action:@selector(toggleEditing)];
-    self.navigationItem.leftBarButtonItem = nil;
+    self.navigationItem.leftBarButtonItem = _openInIFileItem;
     self.navigationItem.rightBarButtonItem = item;
     [item release];
 }
@@ -473,8 +490,17 @@ didEndEditingRowAtIndexPath:(NSIndexPath *)indexPath {
     }
 }
 
+- (void)openReceivedInIFile {
+    NSString *escaped = [OSReceivedDirectory()
+        stringByAddingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+    NSURL *url = [NSURL URLWithString:[@"ifile://" stringByAppendingString:escaped]];
+
+    if (url != nil) [[UIApplication sharedApplication] openURL:url];
+}
+
 - (void)dealloc {
     [[NSNotificationCenter defaultCenter] removeObserver:self];
+    [_openInIFileItem release];
     [_tableView release];
     [_emptyLabel release];
     [_pathLabel release];

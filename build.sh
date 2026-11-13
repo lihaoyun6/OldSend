@@ -29,8 +29,8 @@ case "$TARGET" in
         ;;
 esac
 
-SDK="${SDK:-${TMPDIR:-/tmp}/sdk/iPhoneOS3.1.3.sdk}"
-SDK_DYLIB="${SDK_DYLIB:-${TMPDIR:-/tmp}/sdk/iPhoneOS4.2.sdk}"
+SDK="${SDK:-$ROOT/sdk/iPhoneOS3.1.3.sdk}"
+SDK_DYLIB="${SDK_DYLIB:-$ROOT/sdk/iPhoneOS4.2.sdk}"
 
 if [ ! -f "$SDK/System/Library/Frameworks/UIKit.framework/Headers/UIKit.h" ]; then
     echo "error: iPhoneOS3.1.3 SDK not found at $SDK" >&2

@@ -27,6 +27,7 @@ static NSString *OSMIMETypeForPath(NSString *path) {
 
 /* iPhoneOS 3.1.3 SDK predates the iPad; UIPopoverController is declared here
    and only instantiated via NSClassFromString on iPad at runtime. */
+#if __IPHONE_OS_VERSION_MAX_ALLOWED < 40000
 @interface UIPopoverController : NSObject
 - (id)initWithContentViewController:(UIViewController *)viewController;
 - (void)presentPopoverFromRect:(CGRect)rect
@@ -36,6 +37,7 @@ static NSString *OSMIMETypeForPath(NSString *path) {
 - (void)dismissPopoverAnimated:(BOOL)animated;
 @property (nonatomic, assign) id delegate;
 @end
+#endif
 
 @interface UIActionSheet (OSPad)
 - (void)showFromBarButtonItem:(UIBarButtonItem *)item animated:(BOOL)animated;

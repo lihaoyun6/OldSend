@@ -9,6 +9,8 @@
 #import "OSServer.h"
 #import "OSPlatform.h"
 #import "OSNavigationController.h"
+#import "MediaPickerLoader.h"
+#import "OSHUD.h"
 
 static NSString *OSQueryValue(NSString *query, NSString *key) {
     for (NSString *pair in [query componentsSeparatedByString:@"&"]) {
@@ -26,6 +28,22 @@ static NSString *OSDecodeMarkerText(NSString *text) {
     decoded = [decoded stringByReplacingOccurrencesOfString:@"%0D" withString:@"\r"];
     decoded = [decoded stringByReplacingOccurrencesOfString:@"%25" withString:@"%"];
     return decoded;
+}
+
+static NSArray *OSQueryValues(NSString *query, NSString *key) {
+    NSMutableArray *values = [NSMutableArray array];
+
+    for (NSString *pair in [query componentsSeparatedByString:@"&"]) {
+        NSRange separator = [pair rangeOfString:@"="];
+        if (separator.location == NSNotFound) continue;
+        if (![[pair substringToIndex:separator.location] isEqualToString:key]) continue;
+        {
+            NSString *value = [[pair substringFromIndex:separator.location + 1]
+                stringByReplacingPercentEscapesUsingEncoding:NSUTF8StringEncoding];
+            if (value != nil) [values addObject:value];
+        }
+    }
+    return values;
 }
 
 static NSString *OSShareTemporaryDirectory(void) {
@@ -247,20 +265,35 @@ static NSString *OSUniqueIncomingPath(NSString *directory, NSString *name) {
 
     if ([[url scheme] isEqualToString:@"oldsend"]) {
         NSString *text = OSQueryValue([url query], @"text");
-        if ([text length] == 0) return NO;
 
-        [_returnBundleIdentifier release];
-        _returnBundleIdentifier = [(source != nil ? source : @"com.apple.mobilesafari") copy];
+        if ([text length] > 0) {
+            [_returnBundleIdentifier release];
+            _returnBundleIdentifier = [(source != nil ? source : @"com.apple.mobilesafari") copy];
+
+            {
+                NSArray *items = [NSArray arrayWithObject:
+                    [NSDictionary dictionaryWithObjectsAndKeys:
+                        @"text", @"kind", text, @"text", nil]];
+                [self performSelector:@selector(presentShareSendWithItems:)
+                           withObject:items
+                           afterDelay:0.3];
+            }
+            return YES;
+        }
 
         {
-            NSArray *items = [NSArray arrayWithObject:
-                [NSDictionary dictionaryWithObjectsAndKeys:
-                    @"text", @"kind", text, @"text", nil]];
-            [self performSelector:@selector(presentShareSendWithItems:)
-                       withObject:items
-                       afterDelay:0.3];
+            NSArray *assets = OSQueryValues([url query], @"asset");
+            if ([assets count] > 0) {
+                [_returnBundleIdentifier release];
+                _returnBundleIdentifier = [(source != nil ? source : @"com.apple.mobileslideshow") copy];
+                [OSHUD showSaving];
+                [NSThread detachNewThreadSelector:@selector(importAssetsInBackground:)
+                                         toTarget:self
+                                       withObject:assets];
+                return YES;
+            }
         }
-        return YES;
+        return NO;
     }
 
     if (![url isFileURL]) return NO;
@@ -386,6 +419,37 @@ static NSString *OSUniqueIncomingPath(NSString *directory, NSString *name) {
             @"file", @"kind", path, @"path", nil]];
     }
     [self presentShareSendWithItems:items];
+}
+
+- (void)importAssetsInBackground:(NSArray *)urls {
+    NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];
+    NSString *directory = OSShareTemporaryDirectory();
+    NSArray *names = OSExportAssetURLs(urls, directory);
+    NSMutableArray *paths = [NSMutableArray array];
+
+    for (NSString *name in names) {
+        [paths addObject:[directory stringByAppendingPathComponent:name]];
+    }
+    [self performSelectorOnMainThread:@selector(finishAssetImport:)
+                           withObject:paths
+                        waitUntilDone:NO];
+    [pool release];
+}
+
+- (void)finishAssetImport:(NSArray *)paths {
+    [OSHUD hideSaving];
+    if ([paths count] > 0) {
+        [self presentShareSendWithPaths:paths];
+    } else {
+        UIAlertView *alert = [[UIAlertView alloc]
+            initWithTitle:NSLocalizedString(@"import.failed_title", nil)
+                  message:NSLocalizedString(@"import.failed_message", nil)
+                 delegate:nil
+        cancelButtonTitle:NSLocalizedString(@"common.ok", nil)
+        otherButtonTitles:nil];
+        [alert show];
+        [alert release];
+    }
 }
 
 - (void)presentShareSendWithPath:(NSString *)path {

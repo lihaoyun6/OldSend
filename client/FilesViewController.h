@@ -11,6 +11,7 @@
     UISegmentedControl *_deleteControl;
     UISegmentedControl *_selectAllControl;
     NSMutableSet *_selectedPaths;
+    UIBarButtonItem *_openInIFileItem;
     BOOL _batchEditing;
     BOOL _rowEditing;
 }
