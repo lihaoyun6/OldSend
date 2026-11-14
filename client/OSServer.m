@@ -1014,6 +1014,8 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
 
 - (id)init {
     if ((self = [super init])) {
+        _listenFD = -1;
+        _starting = NO;
         _log = [[NSMutableArray alloc] init];
         _status = [NSLocalizedString(@"status.stopped", nil) retain];
         _alias = [@"iPod touch" copy];
@@ -1908,6 +1910,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     _fingerprint = [[NSString alloc] initWithUTF8String:identity->fingerprint];
     _status = [NSLocalizedString(@"status.ready", nil) retain];
     _running = YES;
+    _starting = YES;
 
     [NSThread detachNewThreadSelector:@selector(serverThreadMain)
                              toTarget:self
@@ -1934,9 +1937,36 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
 - (void)stop {
     if (!_running) return;
     _running = NO;
+
+    /* 关闭监听套接字，让阻塞在 accept() 的线程退出。 */
+    if (_listenFD >= 0) {
+        close(_listenFD);
+        _listenFD = -1;
+    }
+
     [_announceTimer invalidate];
     [_announceTimer release];
     _announceTimer = nil;
+}
+
+- (void)restart {
+    [self stop];
+    [self start];
+}
+
+- (BOOL)needsRestart {
+    int fd = _listenFD;
+    int accepting = 0;
+    socklen_t length = sizeof accepting;
+
+    if (!_running) return YES;
+    if (_starting) return NO;
+    if (fd < 0) return YES;
+
+    /* 长时间睡眠后系统会回收套接字，此时 fd 可能已失效。 */
+    if (fcntl(fd, F_GETFD) < 0) return YES;
+    if (getsockopt(fd, SOL_SOCKET, SO_ACCEPTCONN, &accepting, &length) != 0) return YES;
+    return accepting == 0;
 }
 
 - (void)serverThreadMain {
@@ -1976,6 +2006,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
 
     int listenFD = socket(AF_INET, SOCK_STREAM, 0);
     if (listenFD < 0) {
+        _starting = NO;
         os_logf(self, @"socket() failed: %s", strerror(errno));
         mbedtls_ssl_config_free(&conf);
         return;
@@ -1991,6 +2022,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     addr.sin_port = htons(OS_PORT);
 
     if (bind(listenFD, (struct sockaddr *)&addr, sizeof addr) != 0) {
+        _starting = NO;
         os_logf(self, @"Bind to port %d failed: %s", OS_PORT, strerror(errno));
         close(listenFD);
         mbedtls_ssl_config_free(&conf);
@@ -1998,12 +2030,15 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
     }
 
     if (listen(listenFD, 8) != 0) {
+        _starting = NO;
         os_logf(self, @"listen() failed: %s", strerror(errno));
         close(listenFD);
         mbedtls_ssl_config_free(&conf);
         return;
     }
 
+    _listenFD = listenFD;
+    _starting = NO;
     os_logf(self, @"TLS server listening on %@:%d", _localIP, OS_PORT);
 
     while (_running) {
@@ -2023,6 +2058,7 @@ static NSString *os_unique_path(NSString *directory, NSString *name) {
         close(clientFD);
     }
 
+    if (_listenFD == listenFD) _listenFD = -1;
     close(listenFD);
     mbedtls_ssl_config_free(&conf);
     os_logf(self, @"TLS server stopped");

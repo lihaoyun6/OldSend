@@ -493,6 +493,11 @@ static NSString *OSUniqueIncomingPath(NSString *directory, NSString *name) {
 }
 
 - (void)applicationDidBecomeActive:(UIApplication *)application {
+    /* 设备长时间睡眠后，系统会关掉监听套接字而进程仍是“运行中”，
+       这里检测到没有监听就重新启动服务器，否则设备之间互相发现会失效。 */
+    if ([[OSServer shared] needsRestart]) {
+        [[OSServer shared] restart];
+    }
     [self processPendingImports];
 }
 
