@@ -322,6 +322,7 @@ static CGFloat MediaThumbSize(CGFloat width, NSInteger columns) {
         return;
     }
 
+    [_library release];
     _library = library;
     if (gActiveMediaPicker != self) {
         [gActiveMediaPicker release];
@@ -377,8 +378,9 @@ static CGFloat MediaThumbSize(CGFloat width, NSInteger columns) {
     _assets = [_loadingAssets retain];
     [_loadingAssets release];
     _loadingAssets = nil;
-    [_library release];
-    _library = nil;
+
+    /* ALAsset 的缩略图/数据访问要求 ALAssetsLibrary 实例存活，提前释放会让
+       reloadData 后的单元格拿到空缩略图。这里保留到控制器销毁。 */
     [gActiveGroup release];
     gActiveGroup = nil;
     [gActiveFilter release];
